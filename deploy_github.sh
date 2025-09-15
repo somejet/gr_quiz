@@ -33,7 +33,9 @@ REPO_NAME=$(echo $REPO_URL | sed 's/.*\/\([^/]*\)\.git$/\1/')
 
 # Создаем ветку gh-pages если её нет
 echo "🌿 Настройка ветки gh-pages..."
+git stash
 git checkout -b gh-pages 2>/dev/null || git checkout gh-pages
+git stash pop
 
 # Копируем файлы из build/web в корень
 echo "📁 Копирование файлов..."
