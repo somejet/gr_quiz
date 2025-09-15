@@ -415,13 +415,15 @@ class _QuizScreenState extends State<QuizScreen>
                     _buildActionButton(),
                     const SizedBox(height: 16),
                     
-                    // Клавиатура
-                    Expanded(
-                      flex: 3,
-                      child: GreekKeyboard(
-                        onKeyPressed: _onKeyPressed,
+                    // Клавиатура (только на десктопе)
+                    if (MediaQuery.of(context).size.width > 600) ...[
+                      Expanded(
+                        flex: 3,
+                        child: GreekKeyboard(
+                          onKeyPressed: _onKeyPressed,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -836,8 +838,28 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   String _getFormattedCorrectAnswer() {
-    // Для всех типов вопросов показываем только основной правильный ответ
-    return _currentQuestion!.correctAnswer;
+    if (_currentQuestion!.type == QuestionType.greekToRussian) {
+      // Для русских ответов показываем только основной правильный ответ
+      return _currentQuestion!.correctAnswer;
+    } else {
+      // Для греческих ответов показываем полную и сокращенную формы
+      List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
+      
+      if (uniqueAnswers.length == 1) {
+        return uniqueAnswers.first;
+      } else {
+        // Сортируем: сначала полная форма, потом короткие
+        uniqueAnswers.sort((a, b) {
+          if (a.length > b.length) return -1;
+          if (a.length < b.length) return 1;
+          return 0;
+        });
+        
+        // Показываем максимум 2 варианта: полную и сокращенную формы
+        List<String> displayAnswers = uniqueAnswers.take(2).toList();
+        return displayAnswers.join(' / ');
+      }
+    }
   }
 
   GreekVerb? _getCurrentVerb() {
