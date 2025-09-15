@@ -587,7 +587,7 @@ class _QuizScreenState extends State<QuizScreen>
                           SnackBar(
                             content: Text(
                               _isStressWarning 
-                                  ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
+                                  ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getCorrectAnswerForStressWarning()}'
                                   : _getTooltipMessage(),
                               style: const TextStyle(
                                 fontSize: 16,
@@ -742,7 +742,7 @@ class _QuizScreenState extends State<QuizScreen>
                             _isCorrect 
                                 ? 'Правильно!' 
                                 : _isStressWarning 
-                                    ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
+                                    ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getCorrectAnswerForStressWarning()}'
                                     : 'Правильный ответ: ${_getFormattedCorrectAnswer()}',
                             style: TextStyle(
                               color: _isCorrect ? Colors.green[300] : 
@@ -860,6 +860,11 @@ class _QuizScreenState extends State<QuizScreen>
         return displayAnswers.join(' / ');
       }
     }
+  }
+
+  String _getCorrectAnswerForStressWarning() {
+    // Для предупреждения об ударении показываем только основной правильный ответ
+    return _currentQuestion!.correctAnswer;
   }
 
   GreekVerb? _getCurrentVerb() {
