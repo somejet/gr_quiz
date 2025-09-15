@@ -43,6 +43,7 @@ class _QuizScreenState extends State<QuizScreen>
   late Animation<double> _progressAnimation;
   late Animation<double> _glowAnimation;
   late FocusNode _keyboardFocusNode;
+  late FocusNode _textFieldFocusNode;
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _QuizScreenState extends State<QuizScreen>
     _initializeAnimations();
     _initializeApp();
     _keyboardFocusNode = FocusNode();
+    _textFieldFocusNode = FocusNode();
   }
 
   void _initializeAnimations() {
@@ -122,6 +124,7 @@ class _QuizScreenState extends State<QuizScreen>
     _glowController.dispose();
     _answerController.dispose();
     _keyboardFocusNode.dispose();
+    _textFieldFocusNode.dispose();
     super.dispose();
   }
 
@@ -130,6 +133,12 @@ class _QuizScreenState extends State<QuizScreen>
     _generateNewQuestion();
     _progressAnimationController.forward();
     _glowController.repeat(reverse: true);
+    // На мобильных устройствах автоматически фокусируемся на поле ввода
+    if (MediaQuery.of(context).size.width <= 600) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _textFieldFocusNode.requestFocus();
+      });
+    }
   }
 
   Future<void> _loadProgress() async {
@@ -217,6 +226,12 @@ class _QuizScreenState extends State<QuizScreen>
 
   void _nextQuestion() {
     _generateNewQuestion();
+    // На мобильных устройствах автоматически фокусируемся на поле ввода
+    if (MediaQuery.of(context).size.width <= 600) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _textFieldFocusNode.requestFocus();
+      });
+    }
   }
 
   void _onKeyPressed(String key) {
@@ -662,7 +677,15 @@ class _QuizScreenState extends State<QuizScreen>
             ),
             child: TextField(
               controller: _answerController,
+              focusNode: _textFieldFocusNode,
               enabled: !_showResult,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (value) {
+                if (!_showResult && value.trim().isNotEmpty) {
+                  _checkAnswer();
+                }
+              },
               decoration: InputDecoration(
                 labelText: 'Ваш ответ',
                 labelStyle: const TextStyle(
@@ -693,8 +716,6 @@ class _QuizScreenState extends State<QuizScreen>
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _checkAnswer(),
             ),
           ),
           
