@@ -415,13 +415,14 @@ class _QuizScreenState extends State<QuizScreen>
                     _buildActionButton(),
                     const SizedBox(height: 16),
                     
-                    // Клавиатура
-                    Expanded(
-                      flex: 3,
-                      child: GreekKeyboard(
-                        onKeyPressed: _onKeyPressed,
+                    // Клавиатура (только для десктопа)
+                    if (MediaQuery.of(context).size.width > 600)
+                      Expanded(
+                        flex: 3,
+                        child: GreekKeyboard(
+                          onKeyPressed: _onKeyPressed,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
