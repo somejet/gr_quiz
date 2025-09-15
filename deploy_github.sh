@@ -19,7 +19,7 @@ fi
 
 # Собираем production версию
 echo "📦 Создание production сборки..."
-flutter build web --release
+flutter build web --release --base-href "/$REPO_NAME/"
 
 if [ $? -ne 0 ]; then
     echo "❌ Ошибка при сборке приложения"
