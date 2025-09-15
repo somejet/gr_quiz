@@ -17,6 +17,11 @@ if ! git remote get-url origin >/dev/null 2>&1; then
     exit 1
 fi
 
+# Получаем URL репозитория для отображения ссылки
+REPO_URL=$(git remote get-url origin)
+USERNAME=$(echo $REPO_URL | sed 's/.*github\.com[:/]\([^/]*\).*/\1/')
+REPO_NAME=$(echo $REPO_URL | sed 's/.*\/\([^/]*\)\.git$/\1/')
+
 # Собираем production версию
 echo "📦 Создание production сборки..."
 flutter build web --release --base-href "/$REPO_NAME/"
@@ -25,11 +30,6 @@ if [ $? -ne 0 ]; then
     echo "❌ Ошибка при сборке приложения"
     exit 1
 fi
-
-# Получаем URL репозитория для отображения ссылки
-REPO_URL=$(git remote get-url origin)
-USERNAME=$(echo $REPO_URL | sed 's/.*github\.com[:/]\([^/]*\).*/\1/')
-REPO_NAME=$(echo $REPO_URL | sed 's/.*\/\([^/]*\)\.git$/\1/')
 
 # Создаем ветку gh-pages если её нет
 echo "🌿 Настройка ветки gh-pages..."
