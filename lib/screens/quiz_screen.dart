@@ -439,7 +439,7 @@ class _QuizScreenState extends State<QuizScreen>
       animation: _progressAnimation,
       builder: (context, child) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 20 : 12),
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A2E),
             borderRadius: BorderRadius.circular(20),
@@ -465,9 +465,9 @@ class _QuizScreenState extends State<QuizScreen>
                   _buildProgressStat('✗ Неправильно', '$_wrongAnswers', Colors.red),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 8),
               Container(
-                height: 8,
+                height: MediaQuery.of(context).size.width > 600 ? 8 : 6,
                 decoration: BoxDecoration(
                   color: const Color(0xFF374151),
                   borderRadius: BorderRadius.circular(4),
@@ -539,7 +539,7 @@ class _QuizScreenState extends State<QuizScreen>
             scale: _questionScaleAnimation,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24 : 16),
               decoration: BoxDecoration(
                 color: const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(24),
@@ -558,28 +558,30 @@ class _QuizScreenState extends State<QuizScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: _getCategoryColor().withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _getCategoryColor().withOpacity(0.5),
-                        width: 1,
+                  if (MediaQuery.of(context).size.width > 600) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _getCategoryColor().withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _getCategoryColor().withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        _currentQuestion!.type == QuestionType.greekToRussian
+                            ? 'Переведите на русский'
+                            : 'Переведите на греческий',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _getCategoryColor(),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      _currentQuestion!.type == QuestionType.greekToRussian
-                          ? 'Переведите на русский'
-                          : 'Переведите на греческий',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _getCategoryColor(),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                  ],
                   Tooltip(
                     message: _getTooltipMessage(),
                     preferBelow: false,
@@ -629,7 +631,7 @@ class _QuizScreenState extends State<QuizScreen>
                           return Text(
                             _currentQuestion!.question,
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: MediaQuery.of(context).size.width > 600 ? 24 : 20,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               decoration: TextDecoration.underline,
@@ -664,7 +666,7 @@ class _QuizScreenState extends State<QuizScreen>
         children: [
           // Поле ввода
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 16 : 12),
             decoration: BoxDecoration(
               color: const Color(0xFF1A1A2E),
               borderRadius: BorderRadius.circular(20),
@@ -787,7 +789,7 @@ class _QuizScreenState extends State<QuizScreen>
   Widget _buildActionButton() {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: MediaQuery.of(context).size.width > 600 ? 48 : 44,
       child: ElevatedButton(
         onPressed: _showResult ? _nextQuestion : _checkAnswer,
         style: ElevatedButton.styleFrom(
