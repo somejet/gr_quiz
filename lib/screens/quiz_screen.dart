@@ -43,7 +43,6 @@ class _QuizScreenState extends State<QuizScreen>
   late Animation<double> _progressAnimation;
   late Animation<double> _glowAnimation;
   late FocusNode _keyboardFocusNode;
-  late FocusNode _textFieldFocusNode;
 
   @override
   void initState() {
@@ -51,7 +50,6 @@ class _QuizScreenState extends State<QuizScreen>
     _initializeAnimations();
     _initializeApp();
     _keyboardFocusNode = FocusNode();
-    _textFieldFocusNode = FocusNode();
   }
 
   void _initializeAnimations() {
@@ -124,7 +122,6 @@ class _QuizScreenState extends State<QuizScreen>
     _glowController.dispose();
     _answerController.dispose();
     _keyboardFocusNode.dispose();
-    _textFieldFocusNode.dispose();
     super.dispose();
   }
 
@@ -220,12 +217,6 @@ class _QuizScreenState extends State<QuizScreen>
 
   void _nextQuestion() {
     _generateNewQuestion();
-    // На мобильных устройствах автоматически фокусируемся на поле ввода
-    if (MediaQuery.of(context).size.width <= 600) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _textFieldFocusNode.requestFocus();
-      });
-    }
   }
 
   void _onKeyPressed(String key) {
@@ -271,13 +262,6 @@ class _QuizScreenState extends State<QuizScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Автоматический фокус на мобильных устройствах
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (MediaQuery.of(context).size.width <= 600 && !_showResult) {
-        _textFieldFocusNode.requestFocus();
-      }
-    });
-    
     // Добавляем обработку клавиши Enter для перехода к следующему вопросу
     return KeyboardListener(
       focusNode: _keyboardFocusNode,
@@ -340,14 +324,9 @@ class _QuizScreenState extends State<QuizScreen>
     
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F23),
-      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            children: [
+        child: Column(
+          children: [
             // Современный темный AppBar с градиентом
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -436,21 +415,18 @@ class _QuizScreenState extends State<QuizScreen>
                     _buildActionButton(),
                     const SizedBox(height: 16),
                     
-                    // Клавиатура (только на десктопе)
-                    if (MediaQuery.of(context).size.width > 600) ...[
-                      Expanded(
-                        flex: 3,
-                        child: GreekKeyboard(
-                          onKeyPressed: _onKeyPressed,
-                        ),
+                    // Клавиатура
+                    Expanded(
+                      flex: 3,
+                      child: GreekKeyboard(
+                        onKeyPressed: _onKeyPressed,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
             ),
           ],
-          ),
         ),
       ),
     );
@@ -609,7 +585,7 @@ class _QuizScreenState extends State<QuizScreen>
                           SnackBar(
                             content: Text(
                               _isStressWarning 
-                                  ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getCorrectAnswerForStressWarning()}'
+                                  ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
                                   : _getTooltipMessage(),
                               style: const TextStyle(
                                 fontSize: 16,
@@ -682,23 +658,9 @@ class _QuizScreenState extends State<QuizScreen>
                 ),
               ],
             ),
-            child: GestureDetector(
-              onTap: () {
-                if (!_showResult) {
-                  _textFieldFocusNode.requestFocus();
-                }
-              },
-              child: TextField(
-                controller: _answerController,
-                focusNode: _textFieldFocusNode,
-                enabled: !_showResult,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (value) {
-                  if (!_showResult && value.trim().isNotEmpty) {
-                    _checkAnswer();
-                  }
-                },
+            child: TextField(
+              controller: _answerController,
+              enabled: !_showResult,
               decoration: InputDecoration(
                 labelText: 'Ваш ответ',
                 labelStyle: const TextStyle(
@@ -729,7 +691,8 @@ class _QuizScreenState extends State<QuizScreen>
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
               ),
-              ),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _checkAnswer(),
             ),
           ),
           
@@ -777,7 +740,7 @@ class _QuizScreenState extends State<QuizScreen>
                             _isCorrect 
                                 ? 'Правильно!' 
                                 : _isStressWarning 
-                                    ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getCorrectAnswerForStressWarning()}'
+                                    ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
                                     : 'Правильный ответ: ${_getFormattedCorrectAnswer()}',
                             style: TextStyle(
                               color: _isCorrect ? Colors.green[300] : 
@@ -877,7 +840,7 @@ class _QuizScreenState extends State<QuizScreen>
       // Для русских ответов показываем только основной правильный ответ
       return _currentQuestion!.correctAnswer;
     } else {
-      // Для греческих ответов показываем полную и сокращенную формы
+      // Для греческих ответов показываем все возможные формы
       List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
       
       if (uniqueAnswers.length == 1) {
@@ -890,16 +853,11 @@ class _QuizScreenState extends State<QuizScreen>
           return 0;
         });
         
-        // Показываем максимум 2 варианта: полную и сокращенную формы
+        // Показываем максимум 2 варианта для читаемости
         List<String> displayAnswers = uniqueAnswers.take(2).toList();
         return displayAnswers.join(' / ');
       }
     }
-  }
-
-  String _getCorrectAnswerForStressWarning() {
-    // Для предупреждения об ударении показываем только основной правильный ответ
-    return _currentQuestion!.correctAnswer;
   }
 
   GreekVerb? _getCurrentVerb() {
