@@ -860,11 +860,10 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   String _getFormattedCorrectAnswer() {
-    // Для всех типов вопросов показываем все возможные формы
-    List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
-    
     if (_currentQuestion!.type == QuestionType.greekToRussian) {
       // Для русских ответов показываем базовую форму и варианты с местоимениями
+      List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
+      
       if (uniqueAnswers.length == 1) {
         return uniqueAnswers.first;
       } else {
@@ -887,23 +886,8 @@ class _QuizScreenState extends State<QuizScreen>
         return displayAnswers.join(' / ');
       }
     } else {
-      // Для греческих ответов показываем все возможные формы
-      if (uniqueAnswers.length == 1) {
-        return uniqueAnswers.first;
-      } else {
-        // Убираем дубликаты и сортируем: сначала полная форма, потом короткие
-        uniqueAnswers = uniqueAnswers.toSet().toList();
-        uniqueAnswers.sort((a, b) {
-          // Сначала по длине (длинные формы первыми)
-          if (a.length != b.length) return b.length.compareTo(a.length);
-          // Потом по алфавиту
-          return a.compareTo(b);
-        });
-        
-        // Показываем максимум 3 варианта для читаемости
-        List<String> displayAnswers = uniqueAnswers.take(3).toList();
-        return displayAnswers.join(' / ');
-      }
+      // Для греческих ответов показываем только основной правильный ответ
+      return _currentQuestion!.correctAnswer;
     }
   }
 
