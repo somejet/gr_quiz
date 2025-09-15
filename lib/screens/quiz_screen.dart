@@ -539,7 +539,7 @@ class _QuizScreenState extends State<QuizScreen>
             scale: _questionScaleAnimation,
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 24 : 16),
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 16 : 12),
               decoration: BoxDecoration(
                 color: const Color(0xFF1A1A2E),
                 borderRadius: BorderRadius.circular(24),
@@ -558,30 +558,6 @@ class _QuizScreenState extends State<QuizScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (MediaQuery.of(context).size.width > 600) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor().withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _getCategoryColor().withOpacity(0.5),
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        _currentQuestion!.type == QuestionType.greekToRussian
-                            ? 'Переведите на русский'
-                            : 'Переведите на греческий',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _getCategoryColor(),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
                   Tooltip(
                     message: _getTooltipMessage(),
                     preferBelow: false,
@@ -631,7 +607,7 @@ class _QuizScreenState extends State<QuizScreen>
                           return Text(
                             _currentQuestion!.question,
                             style: TextStyle(
-                              fontSize: MediaQuery.of(context).size.width > 600 ? 24 : 20,
+                              fontSize: MediaQuery.of(context).size.width > 600 ? 28 : 24,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               decoration: TextDecoration.underline,

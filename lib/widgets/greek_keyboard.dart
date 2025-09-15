@@ -19,6 +19,9 @@ class _GreekKeyboardState extends State<GreekKeyboard>
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
+  
+  // Отслеживание нажатых клавиш
+  final Set<String> _pressedKeys = <String>{};
 
   @override
   void initState() {
@@ -149,40 +152,60 @@ class _GreekKeyboardState extends State<GreekKeyboard>
   }
 
   Widget _buildKey(String key) {
+    final bool isPressed = _pressedKeys.contains(key);
+    
     return Container(
       height: 48,
       margin: const EdgeInsets.symmetric(vertical: 3),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => widget.onKeyPressed(key),
+          onTapDown: (_) {
+            setState(() {
+              _pressedKeys.add(key);
+            });
+          },
+          onTapUp: (_) {
+            setState(() {
+              _pressedKeys.remove(key);
+            });
+            widget.onKeyPressed(key);
+          },
+          onTapCancel: () {
+            setState(() {
+              _pressedKeys.remove(key);
+            });
+          },
           borderRadius: BorderRadius.circular(12),
           child: AnimatedBuilder(
             animation: _glowAnimation,
             builder: (context, child) {
-              return Container(
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 100),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF374151),
+                  color: isPressed ? const Color(0xFF4B5563) : const Color(0xFF374151),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF4B5563),
+                    color: isPressed ? const Color(0xFF6B7280) : const Color(0xFF4B5563),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                      color: isPressed 
+                          ? Colors.black.withOpacity(0.4)
+                          : Colors.black.withOpacity(0.2),
+                      blurRadius: isPressed ? 2 : 4,
+                      offset: Offset(0, isPressed ? 1 : 2),
                     ),
                   ],
                 ),
                 child: Center(
                   child: Text(
                     key,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: isPressed ? const Color(0xFFE5E7EB) : Colors.white,
                     ),
                   ),
                 ),
