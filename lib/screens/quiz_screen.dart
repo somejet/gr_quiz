@@ -387,45 +387,45 @@ class _QuizScreenState extends State<QuizScreen>
               ),
             ),
             
-            // Контент
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    // Прогресс
-                    _buildProgressSection(),
-                    const SizedBox(height: 16),
-                    
-                    // Вопрос
-                    Expanded(
-                      flex: 2,
-                      child: _buildQuestionCard(),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Поле ввода и результат
-                    Expanded(
-                      flex: 2,
-                      child: _buildAnswerSection(),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Кнопка действия
-                    _buildActionButton(),
-                    const SizedBox(height: 16),
-                    
-                    // Клавиатура
-                    Expanded(
-                      flex: 3,
-                      child: GreekKeyboard(
-                        onKeyPressed: _onKeyPressed,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                 // Контент
+                 Expanded(
+                   child: Padding(
+                     padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 20 : 16),
+                     child: Column(
+                       children: [
+                         // Прогресс
+                         _buildProgressSection(),
+                         SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 12),
+                         
+                         // Вопрос
+                         Expanded(
+                           flex: 2,
+                           child: _buildQuestionCard(),
+                         ),
+                         SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 12),
+                         
+                         // Поле ввода и результат
+                         Expanded(
+                           flex: 2,
+                           child: _buildAnswerSection(),
+                         ),
+                         SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 12),
+                         
+                         // Кнопка действия
+                         _buildActionButton(),
+                         SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 12),
+                         
+                         // Клавиатура
+                         Expanded(
+                           flex: 3,
+                           child: GreekKeyboard(
+                             onKeyPressed: _onKeyPressed,
+                           ),
+                         ),
+                       ],
+                     ),
+                   ),
+                 ),
           ],
         ),
       ),
@@ -629,7 +629,7 @@ class _QuizScreenState extends State<QuizScreen>
                           return Text(
                             _currentQuestion!.question,
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: MediaQuery.of(context).size.width > 600 ? 24 : 20,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               decoration: TextDecoration.underline,
@@ -787,7 +787,7 @@ class _QuizScreenState extends State<QuizScreen>
   Widget _buildActionButton() {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: MediaQuery.of(context).size.width > 600 ? 48 : 44,
       child: ElevatedButton(
         onPressed: _showResult ? _nextQuestion : _checkAnswer,
         style: ElevatedButton.styleFrom(

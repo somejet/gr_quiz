@@ -67,10 +67,10 @@ class MainScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: MediaQuery.of(context).size.width > 600 ? 1.1 : 0.9,
+                  crossAxisCount: MediaQuery.of(context).size.width > 600 ? 2 : 1,
+                  crossAxisSpacing: MediaQuery.of(context).size.width > 600 ? 16 : 12,
+                  mainAxisSpacing: MediaQuery.of(context).size.width > 600 ? 16 : 12,
+                  childAspectRatio: MediaQuery.of(context).size.width > 600 ? 1.1 : 1.3,
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -305,7 +305,7 @@ class _CategoryCardState extends State<_CategoryCard>
                           onTap: _navigateToQuiz,
                           borderRadius: BorderRadius.circular(24),
                           child: Padding(
-                            padding: const EdgeInsets.all(20),
+                            padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 20 : 16),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -314,8 +314,8 @@ class _CategoryCardState extends State<_CategoryCard>
                                   animation: _glowAnimation,
                                   builder: (context, child) {
                                     return Container(
-                                      width: 50,
-                                      height: 50,
+                                      width: MediaQuery.of(context).size.width > 600 ? 50 : 40,
+                                      height: MediaQuery.of(context).size.width > 600 ? 50 : 40,
                                       decoration: BoxDecoration(
                                         color: _getCategoryColors(widget.category)[0].withOpacity(0.2),
                                         borderRadius: BorderRadius.circular(16),
@@ -335,7 +335,7 @@ class _CategoryCardState extends State<_CategoryCard>
                                         child: Text(
                                           widget.category.code,
                                           style: TextStyle(
-                                            fontSize: 20,
+                                            fontSize: MediaQuery.of(context).size.width > 600 ? 20 : 16,
                                             fontWeight: FontWeight.w800,
                                             color: Colors.white,
                                             shadows: [
@@ -356,9 +356,9 @@ class _CategoryCardState extends State<_CategoryCard>
                                 // Описание
                                 Text(
                                   widget.category.description,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFF9CA3AF),
+                                  style: TextStyle(
+                                    fontSize: MediaQuery.of(context).size.width > 600 ? 12 : 10,
+                                    color: const Color(0xFF9CA3AF),
                                     fontWeight: FontWeight.w500,
                                     height: 1.2,
                                   ),
@@ -569,8 +569,8 @@ class _CategoryCardState extends State<_CategoryCard>
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: isLarge ? 20 : 12,
-              vertical: isLarge ? 12 : 8,
+              horizontal: isLarge ? (MediaQuery.of(context).size.width > 600 ? 20 : 16) : 12,
+              vertical: isLarge ? (MediaQuery.of(context).size.width > 600 ? 12 : 10) : 8,
             ),
             decoration: BoxDecoration(
               gradient: isPrimary 
@@ -602,14 +602,14 @@ class _CategoryCardState extends State<_CategoryCard>
               children: [
                 Icon(
                   icon,
-                  size: isLarge ? 20 : 16,
+                  size: isLarge ? (MediaQuery.of(context).size.width > 600 ? 20 : 18) : 16,
                   color: Colors.white,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: isLarge ? 16 : 12,
+                    fontSize: isLarge ? (MediaQuery.of(context).size.width > 600 ? 16 : 14) : 12,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
