@@ -133,12 +133,6 @@ class _QuizScreenState extends State<QuizScreen>
     _generateNewQuestion();
     _progressAnimationController.forward();
     _glowController.repeat(reverse: true);
-    // На мобильных устройствах автоматически фокусируемся на поле ввода
-    if (MediaQuery.of(context).size.width <= 600) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        _textFieldFocusNode.requestFocus();
-      });
-    }
   }
 
   Future<void> _loadProgress() async {
@@ -277,6 +271,16 @@ class _QuizScreenState extends State<QuizScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Автоматический фокус на мобильных устройствах
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      print('Screen width: $screenWidth, Show result: $_showResult');
+      if (screenWidth <= 600 && !_showResult) {
+        print('Requesting focus for mobile device');
+        _textFieldFocusNode.requestFocus();
+      }
+    });
+    
     // Добавляем обработку клавиши Enter для перехода к следующему вопросу
     return KeyboardListener(
       focusNode: _keyboardFocusNode,
@@ -675,17 +679,23 @@ class _QuizScreenState extends State<QuizScreen>
                 ),
               ],
             ),
-            child: TextField(
-              controller: _answerController,
-              focusNode: _textFieldFocusNode,
-              enabled: !_showResult,
-              keyboardType: TextInputType.text,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (value) {
-                if (!_showResult && value.trim().isNotEmpty) {
-                  _checkAnswer();
+            child: GestureDetector(
+              onTap: () {
+                if (!_showResult) {
+                  _textFieldFocusNode.requestFocus();
                 }
               },
+              child: TextField(
+                controller: _answerController,
+                focusNode: _textFieldFocusNode,
+                enabled: !_showResult,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (value) {
+                  if (!_showResult && value.trim().isNotEmpty) {
+                    _checkAnswer();
+                  }
+                },
               decoration: InputDecoration(
                 labelText: 'Ваш ответ',
                 labelStyle: const TextStyle(
@@ -715,6 +725,7 @@ class _QuizScreenState extends State<QuizScreen>
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 color: Colors.white,
+              ),
               ),
             ),
           ),
