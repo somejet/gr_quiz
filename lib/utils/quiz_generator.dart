@@ -25,10 +25,13 @@ class QuizGenerator {
 
       QuizQuestion question;
       if (questionType == QuestionType.greekToRussian) {
+        // Генерируем варианты русского ответа с местоимениями
+        List<String> allPossibleAnswers = GreekTextUtils.generateRussianVariants(conjugation.russianTranslation);
+        
         question = QuizQuestion(
           question: conjugation.greekForm,
           correctAnswer: conjugation.russianTranslation,
-          allPossibleAnswers: [conjugation.russianTranslation],
+          allPossibleAnswers: allPossibleAnswers,
           type: questionType,
           person: person,
           category: category,
@@ -69,10 +72,13 @@ class QuizGenerator {
     }
 
     if (questionType == QuestionType.greekToRussian) {
+      // Генерируем варианты русского ответа с местоимениями
+      List<String> allPossibleAnswers = GreekTextUtils.generateRussianVariants(conjugation.russianTranslation);
+      
       return QuizQuestion(
         question: conjugation.greekForm,
         correctAnswer: conjugation.russianTranslation,
-        allPossibleAnswers: [conjugation.russianTranslation],
+        allPossibleAnswers: allPossibleAnswers,
         type: questionType,
         person: person,
         category: category,

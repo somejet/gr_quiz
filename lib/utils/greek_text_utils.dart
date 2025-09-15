@@ -224,7 +224,6 @@ class GreekTextUtils {
       variants.add('$baseAnswer ${pronouns[pronoun]![1]}'); // Заглавная буква
     }
 
-    print('Сгенерированы варианты для "$baseAnswer": ${variants.take(10).toList()}');
     return variants.toSet().toList();
   }
 }

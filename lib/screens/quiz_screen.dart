@@ -860,11 +860,34 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   String _getFormattedCorrectAnswer() {
+    // Для всех типов вопросов показываем все возможные формы
+    List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
+    
     if (_currentQuestion!.type == QuestionType.greekToRussian) {
-      return _currentQuestion!.correctAnswer;
+      // Для русских ответов показываем базовую форму и варианты с местоимениями
+      if (uniqueAnswers.length == 1) {
+        return uniqueAnswers.first;
+      } else {
+        // Сортируем: сначала базовая форма (без местоимений), потом с местоимениями
+        uniqueAnswers.sort((a, b) {
+          // Базовая форма (без местоимений) идет первой
+          bool aHasPronoun = a.split(' ').length > 1;
+          bool bHasPronoun = b.split(' ').length > 1;
+          
+          if (!aHasPronoun && bHasPronoun) return -1;
+          if (aHasPronoun && !bHasPronoun) return 1;
+          
+          // Если обе с местоимениями или обе без, сортируем по длине
+          if (a.length != b.length) return a.length.compareTo(b.length);
+          return a.compareTo(b);
+        });
+        
+        // Показываем только первые несколько вариантов, чтобы не перегружать
+        List<String> displayAnswers = uniqueAnswers.take(3).toList();
+        return displayAnswers.join(' / ');
+      }
     } else {
       // Для греческих ответов показываем все возможные формы
-      List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
       if (uniqueAnswers.length == 1) {
         return uniqueAnswers.first;
       } else {
