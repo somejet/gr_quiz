@@ -200,28 +200,28 @@ class GreekTextUtils {
   static List<String> generateRussianVariants(String baseAnswer) {
     List<String> variants = [baseAnswer];
     
-    // Добавляем местоимения для разных лиц
-    Map<String, List<String>> pronouns = {
-      'я': ['я', 'Я'],
-      'ты': ['ты', 'Ты'],
-      'он': ['он', 'Он'],
-      'она': ['она', 'Она'],
-      'оно': ['оно', 'Оно'],
-      'мы': ['мы', 'Мы'],
-      'вы': ['вы', 'Вы'],
-      'они': ['они', 'Они'],
-    };
-
-    // Добавляем варианты с местоимениями перед глаголом
-    for (String pronoun in pronouns.keys) {
-      variants.add('$pronoun $baseAnswer');
-      variants.add('${pronouns[pronoun]![1]} $baseAnswer'); // Заглавная буква
-    }
-
-    // Добавляем варианты с местоимениями после глагола
-    for (String pronoun in pronouns.keys) {
-      variants.add('$baseAnswer $pronoun');
-      variants.add('$baseAnswer ${pronouns[pronoun]![1]}'); // Заглавная буква
+    // Определяем лицо и число глагола по окончанию
+    String verbForm = baseAnswer.toLowerCase().trim();
+    
+    // Определяем лицо и число по окончанию глагола
+    if (verbForm.endsWith('ю') || verbForm.endsWith('у')) {
+      // 1-е лицо единственного числа (делаю, нахожусь)
+      variants.addAll(['я $baseAnswer', 'Я $baseAnswer']);
+    } else if (verbForm.endsWith('ешь') || verbForm.endsWith('ишь')) {
+      // 2-е лицо единственного числа (делаешь, находишься)
+      variants.addAll(['ты $baseAnswer', 'Ты $baseAnswer']);
+    } else if (verbForm.endsWith('ет') || verbForm.endsWith('ит')) {
+      // 3-е лицо единственного числа (делает, находится)
+      variants.addAll(['он $baseAnswer', 'Он $baseAnswer', 'она $baseAnswer', 'Она $baseAnswer', 'оно $baseAnswer', 'Оно $baseAnswer']);
+    } else if (verbForm.endsWith('ем') || verbForm.endsWith('им')) {
+      // 1-е лицо множественного числа (делаем, находимся)
+      variants.addAll(['мы $baseAnswer', 'Мы $baseAnswer']);
+    } else if (verbForm.endsWith('ете') || verbForm.endsWith('ите')) {
+      // 2-е лицо множественного числа (делаете, находитесь)
+      variants.addAll(['вы $baseAnswer', 'Вы $baseAnswer']);
+    } else if (verbForm.endsWith('ют') || verbForm.endsWith('ат') || verbForm.endsWith('ят')) {
+      // 3-е лицо множественного числа (делают, находятся)
+      variants.addAll(['они $baseAnswer', 'Они $baseAnswer']);
     }
 
     return variants.toSet().toList();
