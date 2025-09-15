@@ -273,10 +273,7 @@ class _QuizScreenState extends State<QuizScreen>
   Widget build(BuildContext context) {
     // Автоматический фокус на мобильных устройствах
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      print('Screen width: $screenWidth, Show result: $_showResult');
-      if (screenWidth <= 600 && !_showResult) {
-        print('Requesting focus for mobile device');
+      if (MediaQuery.of(context).size.width <= 600 && !_showResult) {
         _textFieldFocusNode.requestFocus();
       }
     });
@@ -343,9 +340,14 @@ class _QuizScreenState extends State<QuizScreen>
     
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F23),
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Column(
-          children: [
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            children: [
             // Современный темный AppBar с градиентом
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -448,6 +450,7 @@ class _QuizScreenState extends State<QuizScreen>
               ),
             ),
           ],
+          ),
         ),
       ),
     );
