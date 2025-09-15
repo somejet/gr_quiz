@@ -44,9 +44,13 @@ class GreekVerb {
     
     List<String> forms = [conjugation.greekForm];
     
-    // Добавляем альтернативные окончания для Γ1/Γ2
+    // Добавляем альтернативные окончания только если они относятся к тому же лицу
     if (alternativeEndings != null && alternativeEndings!.isNotEmpty) {
-      forms.addAll(alternativeEndings!);
+      // Проверяем, что альтернативные окончания действительно относятся к этому лицу
+      // Для Γ1/Γ2 альтернативные окончания обычно для "вы" (secondPlural)
+      if (person == Person.secondPlural) {
+        forms.addAll(alternativeEndings!);
+      }
     }
     
     return forms;

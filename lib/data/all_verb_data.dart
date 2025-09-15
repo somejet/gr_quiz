@@ -240,7 +240,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'βρισκόσαστε', russianTranslation: 'находитесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'βρίσκονται', russianTranslation: 'находятся', person: Person.thirdPlural),
         ],
-        alternativeEndings: ['έρχεστε'], // Альтернативное окончание для "вы"
+        // alternativeEndings: ['έρχεστε'], // Убрано - это форма от другого глагола
       ),
       GreekVerb(
         infinitive: 'αισθάνομαι',

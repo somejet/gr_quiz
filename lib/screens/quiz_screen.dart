@@ -891,13 +891,18 @@ class _QuizScreenState extends State<QuizScreen>
       if (uniqueAnswers.length == 1) {
         return uniqueAnswers.first;
       } else {
-        // Сортируем: сначала полная форма, потом короткие
+        // Убираем дубликаты и сортируем: сначала полная форма, потом короткие
+        uniqueAnswers = uniqueAnswers.toSet().toList();
         uniqueAnswers.sort((a, b) {
-          if (a.length > b.length) return -1;
-          if (a.length < b.length) return 1;
-          return 0;
+          // Сначала по длине (длинные формы первыми)
+          if (a.length != b.length) return b.length.compareTo(a.length);
+          // Потом по алфавиту
+          return a.compareTo(b);
         });
-        return uniqueAnswers.join(' / ');
+        
+        // Показываем максимум 3 варианта для читаемости
+        List<String> displayAnswers = uniqueAnswers.take(3).toList();
+        return displayAnswers.join(' / ');
       }
     }
   }
