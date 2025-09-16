@@ -8,6 +8,8 @@ import '../utils/greek_text_utils.dart';
 import '../utils/progress_storage.dart';
 import '../widgets/greek_keyboard.dart';
 import '../data/all_verb_data.dart';
+import 'verbs_list_screen.dart';
+import 'conjugation_rules_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   final VerbCategory category;
@@ -152,24 +154,38 @@ class _QuizScreenState extends State<QuizScreen>
     );
   }
 
-  Future<void> _resetProgress() async {
-    await ProgressStorage.resetProgress();
-    setState(() {
-      _totalQuestionsAsked = 0;
-      _correctAnswers = 0;
-      _wrongAnswers = 0;
-      _totalQuestions = 0;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Прогресс сброшен'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+  void _showVerbsList() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VerbsListScreen(category: widget.category),
+      ),
+    );
+  }
+
+  void _showConjugationRules() {
+    // Находим глагол по вопросу
+    GreekVerb? currentVerb;
+    if (_currentQuestion != null) {
+      final allVerbs = AllVerbData.getAllVerbs();
+      currentVerb = allVerbs.firstWhere(
+        (verb) => verb.conjugations.any(
+          (conjugation) => conjugation.greekForm == _currentQuestion!.question ||
+                         conjugation.russianTranslation == _currentQuestion!.question,
         ),
-        backgroundColor: const Color(0xFF1A1A2E),
+        orElse: () => allVerbs.firstWhere(
+          (verb) => verb.category == widget.category,
+        ),
+      );
+    }
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ConjugationRulesScreen(
+          category: widget.category,
+          currentVerb: currentVerb,
+        ),
       ),
     );
   }
@@ -378,10 +394,20 @@ class _QuizScreenState extends State<QuizScreen>
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: _resetProgress,
-                    tooltip: 'Сбросить прогресс',
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.list, color: Colors.white),
+                        onPressed: _showVerbsList,
+                        tooltip: 'Список глаголов',
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline, color: Colors.white),
+                        onPressed: _showConjugationRules,
+                        tooltip: 'Правила спряжения',
+                      ),
+                    ],
                   ),
                 ],
               ),
