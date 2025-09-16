@@ -407,7 +407,10 @@ class _QuizScreenState extends State<QuizScreen>
                           ),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.list, color: Colors.white, size: 20),
+                          icon: const Text(
+                            '📋',
+                            style: TextStyle(fontSize: 20),
+                          ),
                           onPressed: _showVerbsList,
                           tooltip: 'Список глаголов',
                         ),
@@ -423,7 +426,10 @@ class _QuizScreenState extends State<QuizScreen>
                           ),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                          icon: const Text(
+                            'ℹ️',
+                            style: TextStyle(fontSize: 20),
+                          ),
                           onPressed: _showConjugationRules,
                           tooltip: 'Правила спряжения',
                         ),
