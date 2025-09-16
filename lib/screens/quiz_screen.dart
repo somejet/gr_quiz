@@ -397,42 +397,37 @@ class _QuizScreenState extends State<QuizScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2D2D44),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFF3B82F6),
-                            width: 1,
-                          ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.list,
+                          color: Colors.white,
+                          size: 24,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 4,
+                              offset: const Offset(1, 1),
+                            ),
+                          ],
                         ),
-                        child: IconButton(
-                          icon: const Text(
-                            '📋',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          onPressed: _showVerbsList,
-                          tooltip: 'Список глаголов',
-                        ),
+                        onPressed: _showVerbsList,
+                        tooltip: 'Список глаголов',
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2D2D44),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: const Color(0xFF3B82F6),
-                            width: 1,
-                          ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.info_outline,
+                          color: Colors.white,
+                          size: 24,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 4,
+                              offset: const Offset(1, 1),
+                            ),
+                          ],
                         ),
-                        child: IconButton(
-                          icon: const Text(
-                            'ℹ️',
-                            style: TextStyle(fontSize: 20),
-                          ),
-                          onPressed: _showConjugationRules,
-                          tooltip: 'Правила спряжения',
-                        ),
+                        onPressed: _showConjugationRules,
+                        tooltip: 'Правила спряжения',
                       ),
                     ],
                   ),
@@ -897,21 +892,61 @@ class _QuizScreenState extends State<QuizScreen>
       // Для греческих ответов показываем все возможные формы
       List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
       
-      if (uniqueAnswers.length == 1) {
-        return uniqueAnswers.first;
+      // Убираем дубликаты, которые отличаются только ударением
+      List<String> filteredAnswers = [];
+      for (String answer in uniqueAnswers) {
+        bool isDuplicate = false;
+        for (String existing in filteredAnswers) {
+          // Проверяем, не является ли это дубликатом с другим ударением
+          if (_isSameWordDifferentStress(answer, existing)) {
+            isDuplicate = true;
+            break;
+          }
+        }
+        if (!isDuplicate) {
+          filteredAnswers.add(answer);
+        }
+      }
+      
+      if (filteredAnswers.length == 1) {
+        return filteredAnswers.first;
       } else {
         // Сортируем: сначала полная форма, потом короткие
-        uniqueAnswers.sort((a, b) {
+        filteredAnswers.sort((a, b) {
           if (a.length > b.length) return -1;
           if (a.length < b.length) return 1;
           return 0;
         });
         
         // Показываем максимум 2 варианта для читаемости
-        List<String> displayAnswers = uniqueAnswers.take(2).toList();
+        List<String> displayAnswers = filteredAnswers.take(2).toList();
         return displayAnswers.join(' / ');
       }
     }
+  }
+
+  // Проверяет, являются ли два слова одинаковыми, но с разным ударением
+  bool _isSameWordDifferentStress(String word1, String word2) {
+    // Убираем ударения для сравнения
+    String normalized1 = word1
+        .replaceAll('ά', 'α')
+        .replaceAll('έ', 'ε')
+        .replaceAll('ή', 'η')
+        .replaceAll('ί', 'ι')
+        .replaceAll('ό', 'ο')
+        .replaceAll('ύ', 'υ')
+        .replaceAll('ώ', 'ω');
+    
+    String normalized2 = word2
+        .replaceAll('ά', 'α')
+        .replaceAll('έ', 'ε')
+        .replaceAll('ή', 'η')
+        .replaceAll('ί', 'ι')
+        .replaceAll('ό', 'ο')
+        .replaceAll('ύ', 'υ')
+        .replaceAll('ώ', 'ω');
+    
+    return normalized1 == normalized2;
   }
 
   GreekVerb? _getCurrentVerb() {
