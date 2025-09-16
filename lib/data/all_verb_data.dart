@@ -240,7 +240,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'βρισκόσαστε', russianTranslation: 'находитесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'βρίσκονται', russianTranslation: 'находятся', person: Person.thirdPlural),
         ],
-        // alternativeEndings: ['έρχεστε'], // Убрано - это форма от другого глагола
+        alternativeEndings: ['βρίσκεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'αισθάνομαι',
@@ -254,6 +254,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'αισθανόσαστε', russianTranslation: 'чувствуете', person: Person.secondPlural),
           VerbConjugation(greekForm: 'αισθάνονται', russianTranslation: 'чувствуют', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['αισθάνεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'σκέφτομαι',
@@ -267,6 +268,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'σκεφτόσαστε', russianTranslation: 'думаете', person: Person.secondPlural),
           VerbConjugation(greekForm: 'σκέφτονται', russianTranslation: 'думают', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['σκέφτεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'γίνομαι',
@@ -363,6 +365,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'κοιμόσαστε', russianTranslation: 'спите', person: Person.secondPlural),
           VerbConjugation(greekForm: 'κοιμούνται', russianTranslation: 'спят', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['κοιμάστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'θυμάμαι',
@@ -376,6 +379,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'θυμόσαστε', russianTranslation: 'помните', person: Person.secondPlural),
           VerbConjugation(greekForm: 'θυμούνται', russianTranslation: 'помнят', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['θυμάστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'λυπάμαι',
@@ -389,6 +393,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'λυπόσαστε', russianTranslation: 'жалеете', person: Person.secondPlural),
           VerbConjugation(greekForm: 'λυπούνται', russianTranslation: 'жалеют', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['λυπάστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'φοβάμαι',
