@@ -397,15 +397,36 @@ class _QuizScreenState extends State<QuizScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.list, color: Colors.white),
-                        onPressed: _showVerbsList,
-                        tooltip: 'Список глаголов',
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D44),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF3B82F6),
+                            width: 1,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.list, color: Colors.white, size: 20),
+                          onPressed: _showVerbsList,
+                          tooltip: 'Список глаголов',
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.info_outline, color: Colors.white),
-                        onPressed: _showConjugationRules,
-                        tooltip: 'Правила спряжения',
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2D2D44),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFF3B82F6),
+                            width: 1,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.info_outline, color: Colors.white, size: 20),
+                          onPressed: _showConjugationRules,
+                          tooltip: 'Правила спряжения',
+                        ),
                       ),
                     ],
                   ),
