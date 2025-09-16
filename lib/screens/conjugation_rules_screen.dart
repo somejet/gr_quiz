@@ -164,7 +164,7 @@ class ConjugationRulesScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                conjugation.greekForm,
+                                _getFormattedGreekForm(conjugation),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
@@ -249,5 +249,16 @@ class ConjugationRulesScreen extends StatelessWidget {
       case Person.thirdPlural:
         return 'Они';
     }
+  }
+
+  String _getFormattedGreekForm(VerbConjugation conjugation) {
+    if (conjugation.person == Person.secondPlural && 
+        currentVerb != null && 
+        currentVerb!.alternativeEndings != null && 
+        currentVerb!.alternativeEndings!.isNotEmpty) {
+      // Для "вы" показываем основную форму и сокращенную
+      return '${conjugation.greekForm} / ${currentVerb!.alternativeEndings!.first}';
+    }
+    return conjugation.greekForm;
   }
 }
