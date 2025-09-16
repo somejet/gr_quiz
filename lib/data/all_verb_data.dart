@@ -282,6 +282,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'γινόσαστε', russianTranslation: 'становитесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'γίνονται', russianTranslation: 'становятся', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['γίνεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'έρχομαι',
@@ -309,6 +310,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'φαινόσαστε', russianTranslation: 'кажетесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'φαίνονται', russianTranslation: 'кажутся', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['φαίνεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'χρειάζομαι',
@@ -322,6 +324,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'χρειαζόσαστε', russianTranslation: 'нуждаетесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'χρειάζονται', russianTranslation: 'нуждаются', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['χρειάζεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'κουράζομαι',
@@ -335,6 +338,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'κουραζόσαστε', russianTranslation: 'устаете', person: Person.secondPlural),
           VerbConjugation(greekForm: 'κουράζονται', russianTranslation: 'устают', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['κουράζεστε'], // Сокращенная форма для "вы"
       ),
       GreekVerb(
         infinitive: 'ξεκουράζομαι',
@@ -348,6 +352,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'ξεκουραζόσαστε', russianTranslation: 'отдыхаете', person: Person.secondPlural),
           VerbConjugation(greekForm: 'ξεκουράζονται', russianTranslation: 'отдыхают', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['ξεκουράζεστε'], // Сокращенная форма для "вы"
       ),
     ]);
 
@@ -407,6 +412,7 @@ class AllVerbData {
           VerbConjugation(greekForm: 'φοβόσαστε', russianTranslation: 'боитесь', person: Person.secondPlural),
           VerbConjugation(greekForm: 'φοβούνται', russianTranslation: 'боятся', person: Person.thirdPlural),
         ],
+        alternativeEndings: ['φοβάστε'], // Сокращенная форма для "вы"
       ),
     ]);
 
