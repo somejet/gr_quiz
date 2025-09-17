@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/verb_category.dart';
 import '../models/quiz_question.dart';
 import '../models/greek_verb.dart';
+import '../models/person.dart';
 import '../utils/quiz_generator.dart';
 import '../utils/greek_text_utils.dart';
 import '../utils/progress_storage.dart';
@@ -889,22 +890,30 @@ class _QuizScreenState extends State<QuizScreen>
       // Для русских ответов показываем только основной правильный ответ
       return _currentQuestion!.correctAnswer;
     } else {
-      // Для греческих ответов показываем все возможные формы
-      List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
-      
-      if (uniqueAnswers.length == 1) {
-        return uniqueAnswers.first;
-      } else {
-        // Сортируем: сначала полная форма, потом короткие
-        uniqueAnswers.sort((a, b) {
-          if (a.length > b.length) return -1;
-          if (a.length < b.length) return 1;
-          return 0;
-        });
+      // Для греческих ответов проверяем, нужно ли показывать две формы
+      if (_currentQuestion!.person == Person.secondPlural && 
+          (_currentQuestion!.category == VerbCategory.gamma1 || 
+           _currentQuestion!.category == VerbCategory.gamma2)) {
+        // Для Г1/Г2 "вы" показываем полную и сокращенную формы
+        List<String> uniqueAnswers = _currentQuestion!.allPossibleAnswers.toSet().toList();
         
-        // Показываем максимум 2 варианта для читаемости
-        List<String> displayAnswers = uniqueAnswers.take(2).toList();
-        return displayAnswers.join(' / ');
+        if (uniqueAnswers.length == 1) {
+          return uniqueAnswers.first;
+        } else {
+          // Сортируем: сначала полная форма, потом короткие
+          uniqueAnswers.sort((a, b) {
+            if (a.length > b.length) return -1;
+            if (a.length < b.length) return 1;
+            return 0;
+          });
+          
+          // Показываем максимум 2 варианта для читаемости
+          List<String> displayAnswers = uniqueAnswers.take(2).toList();
+          return displayAnswers.join(' / ');
+        }
+      } else {
+        // Для всех остальных форм показываем только один правильный ответ
+        return _currentQuestion!.correctAnswer;
       }
     }
   }
