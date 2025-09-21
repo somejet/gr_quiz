@@ -887,10 +887,10 @@ class _QuizScreenState extends State<QuizScreen>
             children: [
               // Компактная полоска прогресса с цветовой индикацией
               Container(
-                height: MediaQuery.of(context).size.width > 600 ? 20 : 16,
+                height: MediaQuery.of(context).size.width > 600 ? 24 : 20,
                 decoration: BoxDecoration(
                   color: const Color(0xFF374151),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Stack(
                   children: [
@@ -898,35 +898,46 @@ class _QuizScreenState extends State<QuizScreen>
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF374151),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    // Правильные ответы (зеленые) - заполняют прогресс
-                    if (_correctAnswers > 0)
-                      FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: (_correctAnswers / _targetQuestions * _progressAnimation.value).clamp(0.0, 1.0),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(10),
+                    // Единая полоска прогресса (зеленые + красные сегменты)
+                    Row(
+                      children: [
+                        // Правильные ответы (зеленые)
+                        if (_correctAnswers > 0)
+                          Expanded(
+                            flex: _correctAnswers,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(12),
+                                  bottomLeft: const Radius.circular(12),
+                                  topRight: _wrongAnswers > 0 ? Radius.zero : const Radius.circular(12),
+                                  bottomRight: _wrongAnswers > 0 ? Radius.zero : const Radius.circular(12),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    // Неправильные ответы (красные) - отдельные сегменты
-                    if (_wrongAnswers > 0)
-                      Positioned(
-                        left: (_correctAnswers / _targetQuestions * MediaQuery.of(context).size.width * 0.8).clamp(0.0, double.infinity),
-                        top: 0,
-                        bottom: 0,
-                        width: (_wrongAnswers / _targetQuestions * MediaQuery.of(context).size.width * 0.8).clamp(0.0, double.infinity),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(10),
+                        // Неправильные ответы (красные)
+                        if (_wrongAnswers > 0)
+                          Expanded(
+                            flex: _wrongAnswers,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.only(
+                                  topLeft: _correctAnswers > 0 ? Radius.zero : const Radius.circular(12),
+                                  bottomLeft: _correctAnswers > 0 ? Radius.zero : const Radius.circular(12),
+                                  topRight: const Radius.circular(12),
+                                  bottomRight: const Radius.circular(12),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                      ],
+                    ),
                     // Текст прогресса поверх полоски
                     Center(
                       child: Text(
