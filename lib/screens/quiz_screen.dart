@@ -1281,7 +1281,11 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   GreekVerb? _getCurrentVerb() {
-    final verbs = AllVerbData.getVerbsByCategory(_currentQuestion!.category);
+    // Для Daily квиза ищем глагол во всех категориях
+    final verbs = widget.category == VerbCategory.daily 
+        ? AllVerbData.getAllVerbs()
+        : AllVerbData.getVerbsByCategory(_currentQuestion!.category);
+    
     for (final verb in verbs) {
       for (final conjugation in verb.conjugations) {
         if (_currentQuestion!.type == QuestionType.greekToRussian) {
