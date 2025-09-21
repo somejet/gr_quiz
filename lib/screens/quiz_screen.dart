@@ -857,8 +857,6 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   Widget _buildProgressSection() {
-    // Показываем 100% прогресс если квиз завершен
-    final progress = _isQuizCompleted ? 1.0 : (_totalQuestionsAsked / _targetQuestions);
     
     return AnimatedBuilder(
       animation: _progressAnimation,
