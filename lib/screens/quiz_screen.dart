@@ -936,6 +936,12 @@ class _QuizScreenState extends State<QuizScreen>
                               ),
                             ),
                           ),
+                        // Пустое место для неотвеченных вопросов
+                        if (_totalQuestionsAsked < _targetQuestions)
+                          Expanded(
+                            flex: _targetQuestions - _totalQuestionsAsked,
+                            child: Container(),
+                          ),
                       ],
                     ),
                     // Текст прогресса поверх полоски
