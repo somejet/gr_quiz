@@ -1,11 +1,11 @@
 {
-    "name": "greek_quiz_app",
-    "short_name": "greek_quiz_app",
+    "name": "Греческий Квиз",
+    "short_name": "Греческий Квиз",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#1A1A2E",
+    "theme_color": "#1A1A2E",
+    "description": "Изучайте греческие глаголы с помощью интерактивного квиза. Daily квиз с ежедневным сбросом прогресса.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
