@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/verb_category.dart';
@@ -37,6 +39,7 @@ class _QuizScreenState extends State<QuizScreen>
   String? _warningMessage;
   bool _isTooltipVisible = false;
   bool _isQuizCompleted = false; // Добавляем флаг завершения квиза
+  bool _isButtonPressed = false; // Состояние нажатия кнопки
   late FocusNode _answerFocusNode;
   
   late AnimationController _questionAnimationController;
@@ -130,6 +133,7 @@ class _QuizScreenState extends State<QuizScreen>
     _answerController.dispose();
     _keyboardFocusNode.dispose();
     _answerFocusNode.dispose();
+    _tooltipTimer?.cancel(); // Отменяем таймер тултипа
     _hideTooltip(); // Очищаем overlay при dispose
     // Сохраняем прогресс при выходе из экрана
     _saveProgress();
@@ -271,53 +275,6 @@ class _QuizScreenState extends State<QuizScreen>
       // Показываем диалог завершения квиза
       _showQuizCompletionDialog();
     }
-  }
-
-  void _debugCompleteQuiz() {
-    // Дебажная функция для мгновенного завершения квиза
-    setState(() {
-      _totalQuestionsAsked = _targetQuestions - 1; // Все задания кроме одного
-      _correctAnswers = (_targetQuestions - 1) ~/ 2; // Половина правильных
-      _wrongAnswers = _totalQuestionsAsked - _correctAnswers; // Остальные неправильные
-    });
-    
-    _saveProgress();
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Дебаг: прогресс установлен на ${_totalQuestionsAsked}/${_targetQuestions}'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: Colors.orange[800],
-      ),
-    );
-  }
-
-  void _debugResetProgress() async {
-    // Дебажная функция для сброса прогресса
-    await ProgressStorage.resetCategoryProgress(widget.category);
-    
-    setState(() {
-      _totalQuestionsAsked = 0;
-      _correctAnswers = 0;
-      _wrongAnswers = 0;
-      _isQuizCompleted = false;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Дебаг: прогресс полностью сброшен'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        backgroundColor: Colors.red[800],
-      ),
-    );
   }
 
   void _showQuizCompletionDialog() {
@@ -516,17 +473,57 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   OverlayEntry? _tooltipOverlay;
+  final GlobalKey _questionTextKey = GlobalKey();
+  Timer? _tooltipTimer;
 
   void _showTooltip(BuildContext context) {
-    if (_isTooltipVisible) return; // Предотвращаем множественные показы
+    if (_isTooltipVisible) {
+      // Если тултип уже показан, просто скрываем его
+      _hideTooltip();
+      return;
+    }
     
     setState(() {
       _isTooltipVisible = true;
     });
     
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final Offset position = renderBox.localToGlobal(Offset.zero);
-    final Size size = renderBox.size;
+    // Получаем точную позицию текста вопроса через GlobalKey
+    final RenderBox? textRenderBox = _questionTextKey.currentContext?.findRenderObject() as RenderBox?;
+    if (textRenderBox == null) return;
+    
+    final Offset textPosition = textRenderBox.localToGlobal(Offset.zero);
+    final Size textSize = textRenderBox.size;
+    
+    // Получаем размер экрана для правильного позиционирования
+    final MediaQueryData mediaQuery = MediaQuery.of(context);
+    final double screenWidth = mediaQuery.size.width;
+    
+    // Вычисляем текст тултипа
+    final String tooltipText = _isStressWarning 
+        ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
+        : _getTooltipMessage();
+    
+    // Вычисляем размер текста для правильного центрирования
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: tooltipText,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      maxLines: null,
+    );
+    textPainter.layout(maxWidth: 200);
+    
+    // Центрируем тултип точно над текстом вопроса
+    final double tooltipWidth = textPainter.width.clamp(120.0, 200.0);
+    final double tooltipLeft = (textPosition.dx + textSize.width / 2) - (tooltipWidth / 2);
+    
+    // Проверяем, чтобы тултип не выходил за границы экрана
+    final double clampedLeft = tooltipLeft.clamp(8.0, screenWidth - tooltipWidth - 8.0);
     
     _tooltipOverlay = OverlayEntry(
       builder: (context) => GestureDetector(
@@ -543,12 +540,12 @@ class _QuizScreenState extends State<QuizScreen>
             ),
             // Сам тултип
             Positioned(
-              left: position.dx + (size.width / 2) - 100, // Центрируем тултип над текстом
-              top: position.dy - 80, // Показываем над текстом
+              left: clampedLeft,
+              top: textPosition.dy - 80, // Показываем выше, чтобы не перекрывать слово
               child: Material(
                 color: Colors.transparent,
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 200),
+                  width: tooltipWidth,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: _getCategoryColor().withOpacity(0.95),
@@ -562,9 +559,7 @@ class _QuizScreenState extends State<QuizScreen>
                     ],
                   ),
                   child: Text(
-                    _isStressWarning 
-                        ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
-                        : _getTooltipMessage(),
+                    tooltipText,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -581,9 +576,23 @@ class _QuizScreenState extends State<QuizScreen>
     );
     
     Overlay.of(context).insert(_tooltipOverlay!);
+    
+    // Отменяем предыдущий таймер если он есть
+    _tooltipTimer?.cancel();
+    
+    // Автоматически скрываем тултип через 3 секунды
+    _tooltipTimer = Timer(const Duration(seconds: 3), () {
+      if (_isTooltipVisible) {
+        _hideTooltip();
+      }
+    });
   }
 
   void _hideTooltip() {
+    // Отменяем таймер
+    _tooltipTimer?.cancel();
+    _tooltipTimer = null;
+    
     if (_tooltipOverlay != null) {
       _tooltipOverlay!.remove();
       _tooltipOverlay = null;
@@ -738,40 +747,6 @@ class _QuizScreenState extends State<QuizScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Дебажная кнопка для сброса прогресса
-                      IconButton(
-                        icon: Icon(
-                          Icons.refresh,
-                          color: Colors.red,
-                          size: 20,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.8),
-                              blurRadius: 4,
-                              offset: const Offset(1, 1),
-                            ),
-                          ],
-                        ),
-                        onPressed: _debugResetProgress,
-                        tooltip: 'Дебаг: сбросить прогресс',
-                      ),
-                      // Дебажная кнопка для тестирования завершения квиза
-                      IconButton(
-                        icon: Icon(
-                          Icons.speed,
-                          color: Colors.orange,
-                          size: 20,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.8),
-                              blurRadius: 4,
-                              offset: const Offset(1, 1),
-                            ),
-                          ],
-                        ),
-                        onPressed: _debugCompleteQuiz,
-                        tooltip: 'Дебаг: завершить квиз',
-                      ),
                       IconButton(
                         icon: Icon(
                           Icons.list,
@@ -1018,6 +993,7 @@ class _QuizScreenState extends State<QuizScreen>
                       animation: _glowAnimation,
                       builder: (context, child) {
                         return Text(
+                          key: _questionTextKey,
                           _currentQuestion!.question,
                           style: TextStyle(
                             fontSize: MediaQuery.of(context).size.width > 600 ? 28 : 24,
@@ -1178,20 +1154,28 @@ class _QuizScreenState extends State<QuizScreen>
     return SizedBox(
       width: double.infinity,
       height: MediaQuery.of(context).size.width > 600 ? 48 : 44,
-      child: ElevatedButton(
-        onPressed: _showResult ? _nextQuestion : _checkAnswer,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ).copyWith(
-          backgroundColor: MaterialStateProperty.all(Colors.transparent),
-        ),
-        child: Container(
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() {
+            _isButtonPressed = true;
+          });
+        },
+        onTapUp: (_) {
+          setState(() {
+            _isButtonPressed = false;
+          });
+          _showResult ? _nextQuestion() : _checkAnswer();
+        },
+        onTapCancel: () {
+          setState(() {
+            _isButtonPressed = false;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 100),
+          transform: _isButtonPressed 
+              ? (Matrix4.identity()..scale(0.98))
+              : Matrix4.identity(),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: _showResult && !_isStressWarning 
@@ -1207,9 +1191,9 @@ class _QuizScreenState extends State<QuizScreen>
                     ? const Color(0xFF3B82F6)
                     : _isStressWarning 
                         ? const Color(0xFFF59E0B)
-                        : _getCategoryColor()).withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                        : _getCategoryColor()).withOpacity(_isButtonPressed ? 0.2 : 0.3),
+                blurRadius: _isButtonPressed ? 8 : 12,
+                offset: Offset(0, _isButtonPressed ? 2 : 4),
               ),
             ],
           ),
