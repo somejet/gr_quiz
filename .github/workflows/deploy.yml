@@ -25,12 +25,21 @@ jobs:
       with:
         flutter-version: '3.24.0'
         channel: 'stable'
+        cache: true
     
     - name: Install dependencies
       run: flutter pub get
     
+    - name: Analyze code
+      run: flutter analyze
+    
     - name: Build web
-      run: flutter build web --release --base-href "/gr_quiz/"
+      run: flutter build web --release --base-href "/gr_quiz/" --no-tree-shake-icons
+    
+    - name: Verify build output
+      run: |
+        ls -la build/web/
+        test -f build/web/index.html
     
     - name: Setup Pages
       uses: actions/configure-pages@v4
