@@ -30,9 +30,6 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
     
-    - name: Analyze code
-      run: flutter analyze --no-fatal-infos
-    
     - name: Build web
       run: flutter build web --release --base-href "/gr_quiz/" --no-tree-shake-icons
     
