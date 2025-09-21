@@ -10,7 +10,14 @@ class QuizGenerator {
   static final Random _random = Random();
 
   static List<QuizQuestion> generateQuestions(VerbCategory category, int count) {
-    final verbs = AllVerbData.getVerbsByCategory(category);
+    List<GreekVerb> verbs;
+    
+    if (category == VerbCategory.daily) {
+      verbs = AllVerbData.getDailyVerbs();
+    } else {
+      verbs = AllVerbData.getVerbsByCategory(category);
+    }
+    
     final questions = <QuizQuestion>[];
 
     for (int i = 0; i < count; i++) {
@@ -59,7 +66,14 @@ class QuizGenerator {
   }
 
   static QuizQuestion generateRandomQuestion(VerbCategory category) {
-    final verbs = AllVerbData.getVerbsByCategory(category);
+    List<GreekVerb> verbs;
+    
+    if (category == VerbCategory.daily) {
+      verbs = AllVerbData.getDailyVerbs();
+    } else {
+      verbs = AllVerbData.getVerbsByCategory(category);
+    }
+    
     final verb = verbs[_random.nextInt(verbs.length)];
     final person = Person.values[_random.nextInt(Person.values.length)];
     final questionType = _random.nextBool() 

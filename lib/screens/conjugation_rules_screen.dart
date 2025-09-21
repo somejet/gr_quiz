@@ -198,6 +198,12 @@ class ConjugationRulesScreen extends StatelessWidget {
 
   String _getConjugationRules() {
     switch (category) {
+      case VerbCategory.daily:
+        return '''• Daily квиз содержит рандомные вопросы из всех категорий
+• 50 вопросов ежедневно
+• Прогресс сбрасывается каждый день в 00:00
+• Смешанные правила всех категорий глаголов''';
+      
       case VerbCategory.a:
         return '''• Безударная основа -ω
 • Окончания: -ω, -εις, -ει, -ουμε, -ετε, -ουν

@@ -419,7 +419,34 @@ class AllVerbData {
     return allVerbs;
   }
 
+  // Получить глаголы по категории
   static List<GreekVerb> getVerbsByCategory(VerbCategory category) {
     return getAllVerbs().where((verb) => verb.category == category).toList();
+  }
+
+  // Получить количество глаголов в конкретной категории
+  static int getVerbCountByCategory(VerbCategory category) {
+    return getVerbsByCategory(category).length;
+  }
+
+  // Получить все глаголы для Daily квиза (50 рандомных из всех категорий)
+  static List<GreekVerb> getDailyVerbs() {
+    final allVerbs = getAllVerbs();
+    // Перемешиваем и берем первые 50
+    allVerbs.shuffle();
+    return allVerbs.take(50).toList();
+  }
+
+  // Получить целевое количество заданий для Daily квиза (всегда 50)
+  static int getDailyTargetQuestions() {
+    return 50;
+  }
+
+  // Получить целевое количество заданий для категории (количество глаголов × 2)
+  static int getTargetQuestionsForCategory(VerbCategory category) {
+    if (category == VerbCategory.daily) {
+      return getDailyTargetQuestions();
+    }
+    return getVerbCountByCategory(category) * 2;
   }
 }

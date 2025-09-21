@@ -35,6 +35,9 @@ class _QuizScreenState extends State<QuizScreen>
   bool _isStressWarning = false;
   String _userAnswer = '';
   String? _warningMessage;
+  bool _isTooltipVisible = false;
+  bool _isQuizCompleted = false; // Добавляем флаг завершения квиза
+  late FocusNode _answerFocusNode;
   
   late AnimationController _questionAnimationController;
   late AnimationController _resultAnimationController;
@@ -53,6 +56,7 @@ class _QuizScreenState extends State<QuizScreen>
     _initializeAnimations();
     _initializeApp();
     _keyboardFocusNode = FocusNode();
+    _answerFocusNode = FocusNode();
   }
 
   void _initializeAnimations() {
@@ -125,6 +129,10 @@ class _QuizScreenState extends State<QuizScreen>
     _glowController.dispose();
     _answerController.dispose();
     _keyboardFocusNode.dispose();
+    _answerFocusNode.dispose();
+    _hideTooltip(); // Очищаем overlay при dispose
+    // Сохраняем прогресс при выходе из экрана
+    _saveProgress();
     super.dispose();
   }
 
@@ -136,6 +144,11 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   Future<void> _loadProgress() async {
+    // Если это Daily квиз, проверяем необходимость сброса
+    if (widget.category == VerbCategory.daily) {
+      await ProgressStorage.checkAndResetDailyQuiz();
+    }
+    
     final progress = await ProgressStorage.loadCategoryProgress(widget.category);
     setState(() {
       _totalQuestionsAsked = progress['totalQuestions'] ?? 0;
@@ -146,13 +159,18 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   Future<void> _saveProgress() async {
-    await ProgressStorage.saveCategoryProgress(
-      category: widget.category,
-      totalQuestions: _totalQuestionsAsked,
-      correctAnswers: _correctAnswers,
-      wrongAnswers: _wrongAnswers,
-      targetQuestions: _targetQuestions,
-    );
+    try {
+      await ProgressStorage.saveCategoryProgress(
+        category: widget.category,
+        totalQuestions: _totalQuestionsAsked,
+        correctAnswers: _correctAnswers,
+        wrongAnswers: _wrongAnswers,
+        targetQuestions: _targetQuestions,
+      );
+      print('Прогресс сохранен: total=$_totalQuestionsAsked, correct=$_correctAnswers, wrong=$_wrongAnswers');
+    } catch (e) {
+      print('Ошибка при сохранении прогресса: $e');
+    }
   }
 
   void _showVerbsList() {
@@ -233,7 +251,227 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   void _nextQuestion() {
-    _generateNewQuestion();
+    // Проверяем завершение квиза перед генерацией нового вопроса
+    _checkQuizCompletion();
+    
+    if (!_isQuizCompleted) {
+      _generateNewQuestion();
+      // Сохраняем прогресс при переходе к следующему вопросу
+      _saveProgress();
+    }
+  }
+
+  void _checkQuizCompletion() {
+    final progress = _totalQuestionsAsked / _targetQuestions;
+    if (progress >= 1.0 && !_isQuizCompleted) {
+      setState(() {
+        _isQuizCompleted = true;
+      });
+      
+      // Показываем диалог завершения квиза
+      _showQuizCompletionDialog();
+    }
+  }
+
+  void _debugCompleteQuiz() {
+    // Дебажная функция для мгновенного завершения квиза
+    setState(() {
+      _totalQuestionsAsked = _targetQuestions - 1; // Все задания кроме одного
+      _correctAnswers = (_targetQuestions - 1) ~/ 2; // Половина правильных
+      _wrongAnswers = _totalQuestionsAsked - _correctAnswers; // Остальные неправильные
+    });
+    
+    _saveProgress();
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Дебаг: прогресс установлен на ${_totalQuestionsAsked}/${_targetQuestions}'),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: Colors.orange[800],
+      ),
+    );
+  }
+
+  void _debugResetProgress() async {
+    // Дебажная функция для сброса прогресса
+    await ProgressStorage.resetCategoryProgress(widget.category);
+    
+    setState(() {
+      _totalQuestionsAsked = 0;
+      _correctAnswers = 0;
+      _wrongAnswers = 0;
+      _isQuizCompleted = false;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Дебаг: прогресс полностью сброшен'),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: Colors.red[800],
+      ),
+    );
+  }
+
+  void _showQuizCompletionDialog() {
+    final correctPercentage = _totalQuestionsAsked > 0 
+        ? (_correctAnswers / _totalQuestionsAsked * 100).round()
+        : 0;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1A1A2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.celebration,
+                color: _getCategoryColor(),
+                size: 32,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Поздравляем!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Вы завершили квиз по категории "${widget.category.description}"!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF374151),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Всего заданий:',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        Text(
+                          '$_totalQuestionsAsked',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Правильно:',
+                          style: TextStyle(color: Colors.green),
+                        ),
+                        Text(
+                          '$_correctAnswers',
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Неправильно:',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        Text(
+                          '$_wrongAnswers',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Точность:',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        Text(
+                          '$correctPercentage%',
+                          style: TextStyle(
+                            color: _getCategoryColor(),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Возвращаемся на главный экран
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: _getCategoryColors(),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Завершить',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _onKeyPressed(String key) {
@@ -277,29 +515,140 @@ class _QuizScreenState extends State<QuizScreen>
     }
   }
 
+  OverlayEntry? _tooltipOverlay;
+
+  void _showTooltip(BuildContext context) {
+    if (_isTooltipVisible) return; // Предотвращаем множественные показы
+    
+    setState(() {
+      _isTooltipVisible = true;
+    });
+    
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final Offset position = renderBox.localToGlobal(Offset.zero);
+    final Size size = renderBox.size;
+    
+    _tooltipOverlay = OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: () {
+          _hideTooltip();
+        },
+        child: Stack(
+          children: [
+            // Прозрачный фон для закрытия тултипа
+            Positioned.fill(
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+            // Сам тултип
+            Positioned(
+              left: position.dx + (size.width / 2) - 100, // Центрируем тултип над текстом
+              top: position.dy - 80, // Показываем над текстом
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: _getCategoryColor().withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    _isStressWarning 
+                        ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
+                        : _getTooltipMessage(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    Overlay.of(context).insert(_tooltipOverlay!);
+  }
+
+  void _hideTooltip() {
+    if (_tooltipOverlay != null) {
+      _tooltipOverlay!.remove();
+      _tooltipOverlay = null;
+    }
+    setState(() {
+      _isTooltipVisible = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Добавляем обработку клавиши Enter для перехода к следующему вопросу
-    return KeyboardListener(
-      focusNode: _keyboardFocusNode,
-      onKeyEvent: (KeyEvent event) {
-        if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
-          if (_showResult) {
-            _nextQuestion();
-          } else if (_answerController.text.trim().isNotEmpty) {
-            _checkAnswer();
+    // Настройка статус-бара для белого текста
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // Белые иконки
+        statusBarBrightness: Brightness.dark, // Темный фон для iOS
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
+
+    // Добавляем обработку клавиши Enter только для десктопных устройств
+    final isDesktop = MediaQuery.of(context).size.width > 600;
+    
+    Widget content;
+    if (isDesktop) {
+      content = KeyboardListener(
+        focusNode: _keyboardFocusNode,
+        onKeyEvent: (KeyEvent event) {
+          if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
+            if (_showResult) {
+              _nextQuestion();
+            } else if (_answerController.text.trim().isNotEmpty) {
+              _checkAnswer();
+            }
           }
+        },
+        child: _buildMainContent(),
+      );
+    } else {
+      content = _buildMainContent();
+    }
+    
+    // Обертываем в WillPopScope для предотвращения потери фокуса
+    return WillPopScope(
+      onWillPop: () async {
+        // Предотвращаем потерю фокуса при системных событиях
+        if (_answerFocusNode.hasFocus) {
+          return false;
         }
+        return true;
       },
-      child: _buildMainContent(),
+      child: content,
     );
   }
 
   Widget _buildMainContent() {
-    // Убеждаемся, что фокус установлен для обработки клавиш
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _keyboardFocusNode.requestFocus();
-    });
+    // Убеждаемся, что фокус установлен для обработки клавиш только на десктопе
+    final isDesktop = MediaQuery.of(context).size.width > 600;
+    if (isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _keyboardFocusNode.requestFocus();
+      });
+    }
     
     if (_currentQuestion == null) {
       return Scaffold(
@@ -376,20 +725,11 @@ class _QuizScreenState extends State<QuizScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Квиз - ${widget.category.code}',
+                          'Глаголы ${widget.category.code}',
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Изучайте греческие глаголы',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: const Color(0xFF9CA3AF),
-                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
@@ -398,6 +738,40 @@ class _QuizScreenState extends State<QuizScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Дебажная кнопка для сброса прогресса
+                      IconButton(
+                        icon: Icon(
+                          Icons.refresh,
+                          color: Colors.red,
+                          size: 20,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 4,
+                              offset: const Offset(1, 1),
+                            ),
+                          ],
+                        ),
+                        onPressed: _debugResetProgress,
+                        tooltip: 'Дебаг: сбросить прогресс',
+                      ),
+                      // Дебажная кнопка для тестирования завершения квиза
+                      IconButton(
+                        icon: Icon(
+                          Icons.speed,
+                          color: Colors.orange,
+                          size: 20,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 4,
+                              offset: const Offset(1, 1),
+                            ),
+                          ],
+                        ),
+                        onPressed: _debugCompleteQuiz,
+                        tooltip: 'Дебаг: завершить квиз',
+                      ),
                       IconButton(
                         icon: Icon(
                           Icons.list,
@@ -483,7 +857,8 @@ class _QuizScreenState extends State<QuizScreen>
   }
 
   Widget _buildProgressSection() {
-    final progress = _totalQuestionsAsked / _targetQuestions;
+    // Показываем 100% прогресс если квиз завершен
+    final progress = _isQuizCompleted ? 1.0 : (_totalQuestionsAsked / _targetQuestions);
     
     return AnimatedBuilder(
       animation: _progressAnimation,
@@ -510,7 +885,11 @@ class _QuizScreenState extends State<QuizScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildProgressStat('Прогресс', '$_totalQuestionsAsked/$_targetQuestions', _getCategoryColor()),
+                  _buildProgressStat(
+                    'Прогресс', 
+                    _isQuizCompleted ? '$_targetQuestions/$_targetQuestions ✓' : '$_totalQuestionsAsked/$_targetQuestions', 
+                    _isQuizCompleted ? Colors.green : _getCategoryColor()
+                  ),
                   _buildProgressStat('✓ Правильно', '$_correctAnswers', Colors.green),
                   _buildProgressStat('✗ Неправильно', '$_wrongAnswers', Colors.red),
                 ],
@@ -608,73 +987,43 @@ class _QuizScreenState extends State<QuizScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Tooltip(
-                    message: _getTooltipMessage(),
-                    preferBelow: false,
-                    showDuration: const Duration(seconds: 4),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getCategoryColor().withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              _isStressWarning 
-                                  ? 'Правильно, но обратите внимание на ударение. Правильно: ${_getFormattedCorrectAnswer()}'
-                                  : _getTooltipMessage(),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                  GestureDetector(
+                    onTap: () {
+                      // Сохраняем фокус перед показом тултипа
+                      final bool wasFocused = _answerFocusNode.hasFocus;
+                      _showTooltip(context);
+                      // Восстанавливаем фокус если он был
+                      if (wasFocused) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _answerFocusNode.requestFocus();
+                        });
+                      }
+                    },
+                    // Предотвращаем потерю фокуса при клике на слово
+                    behavior: HitTestBehavior.opaque,
+                    child: AnimatedBuilder(
+                      animation: _glowAnimation,
+                      builder: (context, child) {
+                        return Text(
+                          _currentQuestion!.question,
+                          style: TextStyle(
+                            fontSize: MediaQuery.of(context).size.width > 600 ? 28 : 24,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            decorationStyle: TextDecorationStyle.dotted,
+                            decorationColor: _getCategoryColor().withOpacity(0.6),
+                            decorationThickness: 2,
+                            shadows: [
+                              Shadow(
+                                color: _getCategoryColor().withOpacity(0.3 * _glowAnimation.value),
+                                blurRadius: 10,
                               ),
-                            ),
-                            duration: const Duration(seconds: 3),
-                            backgroundColor: _getCategoryColor(),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            ],
                           ),
+                          textAlign: TextAlign.center,
                         );
                       },
-                      child: AnimatedBuilder(
-                        animation: _glowAnimation,
-                        builder: (context, child) {
-                          return Text(
-                            _currentQuestion!.question,
-                            style: TextStyle(
-                              fontSize: MediaQuery.of(context).size.width > 600 ? 28 : 24,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              decoration: TextDecoration.underline,
-                              decorationStyle: TextDecorationStyle.dotted,
-                              decorationColor: _getCategoryColor().withOpacity(0.6),
-                              decorationThickness: 2,
-                              shadows: [
-                                Shadow(
-                                  color: _getCategoryColor().withOpacity(0.3 * _glowAnimation.value),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          );
-                        },
-                      ),
                     ),
                   ),
                 ],
@@ -696,10 +1045,6 @@ class _QuizScreenState extends State<QuizScreen>
             decoration: BoxDecoration(
               color: const Color(0xFF1A1A2E),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: _getCategoryColor().withOpacity(0.3),
-                width: 1,
-              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.3),
@@ -710,23 +1055,27 @@ class _QuizScreenState extends State<QuizScreen>
             ),
             child: TextField(
               controller: _answerController,
+              focusNode: _answerFocusNode,
               enabled: !_showResult,
+              keyboardType: TextInputType.text,
+              enableSuggestions: false,
+              autocorrect: false,
               decoration: InputDecoration(
-                labelText: 'Ваш ответ',
+                labelText: 'Переведите',
                 labelStyle: const TextStyle(
                   color: Color(0xFF9CA3AF),
                   fontWeight: FontWeight.w500,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: const Color(0xFF374151)),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: const Color(0xFF374151)),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: _getCategoryColor(), width: 2),
                 ),
                 filled: true,
@@ -940,6 +1289,8 @@ class _QuizScreenState extends State<QuizScreen>
 
   Color _getCategoryColor() {
     switch (widget.category) {
+      case VerbCategory.daily:
+        return const Color(0xFFFF6B6B);
       case VerbCategory.a:
         return const Color(0xFF3B82F6);
       case VerbCategory.b1:
@@ -957,6 +1308,8 @@ class _QuizScreenState extends State<QuizScreen>
 
   List<Color> _getCategoryColors() {
     switch (widget.category) {
+      case VerbCategory.daily:
+        return [const Color(0xFFFF6B6B), const Color(0xFFEE5A52)];
       case VerbCategory.a:
         return [const Color(0xFF3B82F6), const Color(0xFF1E40AF)];
       case VerbCategory.b1:
