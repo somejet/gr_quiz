@@ -864,7 +864,10 @@ class _QuizScreenState extends State<QuizScreen>
       animation: _progressAnimation,
       builder: (context, child) {
         return Container(
-          padding: EdgeInsets.all(MediaQuery.of(context).size.width > 600 ? 20 : 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: MediaQuery.of(context).size.width > 600 ? 20 : 16,
+            vertical: MediaQuery.of(context).size.width > 600 ? 16 : 12,
+          ),
           decoration: BoxDecoration(
             color: const Color(0xFF1A1A2E),
             borderRadius: BorderRadius.circular(20),
@@ -882,43 +885,82 @@ class _QuizScreenState extends State<QuizScreen>
           ),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildProgressStat(
-                    'Прогресс', 
-                    _isQuizCompleted ? '$_targetQuestions/$_targetQuestions ✓' : '$_totalQuestionsAsked/$_targetQuestions', 
-                    _isQuizCompleted ? Colors.green : _getCategoryColor()
-                  ),
-                  _buildProgressStat('✓ Правильно', '$_correctAnswers', Colors.green),
-                  _buildProgressStat('✗ Неправильно', '$_wrongAnswers', Colors.red),
-                ],
-              ),
-              SizedBox(height: MediaQuery.of(context).size.width > 600 ? 16 : 8),
+              // Компактная полоска прогресса с цветовой индикацией
               Container(
-                height: MediaQuery.of(context).size.width > 600 ? 8 : 6,
+                height: MediaQuery.of(context).size.width > 600 ? 12 : 10,
                 decoration: BoxDecoration(
                   color: const Color(0xFF374151),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: (progress * _progressAnimation.value).clamp(0.0, 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: _getCategoryColors(),
+                child: Stack(
+                  children: [
+                    // Фоновая полоска
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF374151),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _getCategoryColor().withOpacity(0.5),
-                          blurRadius: 8,
-                          spreadRadius: 1,
-                        ),
-                      ],
                     ),
-                  ),
+                    // Правильные ответы (зеленые)
+                    if (_correctAnswers > 0)
+                      Positioned(
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: MediaQuery.of(context).size.width > 600 ? 12 : 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    // Неправильные ответы (красные)
+                    if (_wrongAnswers > 0)
+                      Positioned(
+                        left: _correctAnswers > 0 ? (MediaQuery.of(context).size.width > 600 ? 12 : 10) : 0,
+                        top: 0,
+                        bottom: 0,
+                        width: MediaQuery.of(context).size.width > 600 ? 12 : 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                    // Общий прогресс (цветная полоска)
+                    FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: (progress * _progressAnimation.value).clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: _getCategoryColors(),
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ),
+                    // Текст прогресса поверх полоски
+                    Center(
+                      child: Text(
+                        _isQuizCompleted ? '$_targetQuestions/$_targetQuestions ✓' : '$_totalQuestionsAsked/$_targetQuestions',
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width > 600 ? 14 : 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 2,
+                              offset: const Offset(1, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -928,35 +970,6 @@ class _QuizScreenState extends State<QuizScreen>
     );
   }
 
-  Widget _buildProgressStat(String label, String value, Color color) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: color,
-            shadows: [
-              Shadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 5,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF9CA3AF),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildQuestionCard() {
     return AnimatedBuilder(
